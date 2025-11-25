@@ -1,0 +1,16 @@
+server:
+  port: 8761 # <-- Обязательный порт для сервера
+
+spring:
+  application:
+    name: eureka-server # Имя приложения
+
+eureka:
+  client:
+    # Отключаем функциональность клиента в самом сервере
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: localhost
