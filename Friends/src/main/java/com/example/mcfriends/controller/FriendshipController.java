@@ -42,8 +42,9 @@ public class FriendshipController {
             @PathVariable UUID requestId,
             @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
     ) {
-        extractUserId(userIdHeader);
-        Friendship accepted = friendshipService.acceptFriendRequest(requestId);
+        UUID currentUserId = extractUserId(userIdHeader);
+
+        Friendship accepted = friendshipService.acceptFriendRequest(requestId, currentUserId);
         return ResponseEntity.ok(accepted);
     }
 

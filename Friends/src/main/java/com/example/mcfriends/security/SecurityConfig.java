@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -20,20 +21,30 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    private static final String[] AUTH_WHITELIST = {
+            // Actuator
+            "/actuator/**",
+
+            // Swagger UI и документация (КРИТИЧЕСКИ ВАЖНЫЕ ПУТИ ДЛЯ РАБОТЫ SWAGGER)
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/webjars/**",
+
+            "/api/v1/friends/**"
+
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
 
-                        .requestMatchers("/api/v1/friends/**").permitAll()
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
 
                         .anyRequest().authenticated()
                 )

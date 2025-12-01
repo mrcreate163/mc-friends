@@ -39,9 +39,14 @@ public class FriendshipService {
         return friendshipRepository.save(request);
     }
 
-    public Friendship acceptFriendRequest(UUID requestId) {
+    public Friendship acceptFriendRequest(UUID requestId, UUID currentUserId) {
         Friendship request = friendshipRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Запрос на дружбу с ID " + requestId + " не найден"));
+
+        if (!request.getUserIdTarget().equals(currentUserId)) {
+
+            throw new RuntimeException("Доступ запрещен: Только целевой пользователь может принять этот запрос.");
+        }
 
         if (request.getStatus() != FriendshipStatus.PENDING) {
             throw new RuntimeException("Запрос уже обработан");
