@@ -1,6 +1,6 @@
 spring:
   application:
-    name: mc-friends
+    name: FRIEND-SERVICE
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/friends_db}
