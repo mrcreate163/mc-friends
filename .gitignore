@@ -1,0 +1,27 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
