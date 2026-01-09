@@ -20,6 +20,9 @@ spring:
 
 client:
   auth: "http://mc-auth:8081"
+services:
+  account:
+    url: ${ACCOUNT_SERVICE_URL:http://localhost:8080/internal/account}
 
 eureka:
   client:
