@@ -253,7 +253,7 @@ public class FriendshipService {
             case BLOCKED:
                 dto.setStatusCode("BLOCKED");
                 break;
-            default:
+            case DECLINED:
                 dto.setStatusCode("NONE");
                 break;
         }

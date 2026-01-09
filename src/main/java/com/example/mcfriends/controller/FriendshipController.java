@@ -113,7 +113,7 @@ public class FriendshipController {
             @AuthenticationPrincipal UserDataDetails userDetails,
             Pageable pageable
     ) {
-        // Заглушка: возвращаем пустую страницу
+        // Stub: returns empty page
         return ResponseEntity.ok(Page.empty(pageable));
     }
 

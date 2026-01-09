@@ -9,5 +9,5 @@ import java.util.UUID;
 public class FriendshipStatusDto {
     private UUID userId;
     private String statusCode; // FRIEND, PENDING_INCOMING, PENDING_OUTGOING, BLOCKED, NONE
-    private Friendship friendship; // может быть null
+    private Friendship friendship; // can be null
 }
