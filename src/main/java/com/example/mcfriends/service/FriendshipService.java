@@ -3,7 +3,9 @@ package com.example.mcfriends.service;
 import com.example.mcfriends.client.AccountClient;
 import com.example.mcfriends.dto.AccountDto;
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.exception.FriendshipAlreadyExistsException;
 import com.example.mcfriends.exception.ResourceNotFoundException;
+import com.example.mcfriends.exception.SelfFriendshipException;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.model.FriendshipStatus;
 import com.example.mcfriends.repository.FriendshipRepository;
@@ -31,6 +33,21 @@ public class FriendshipService {
     }
 
     public Friendship sendFriendRequest(UUID initiatorId, UUID targetId) {
+        // Validate: Cannot send friend request to yourself
+        if (initiatorId.equals(targetId)) {
+            throw new SelfFriendshipException();
+        }
+
+        // Check if friendship already exists
+        friendshipRepository.findByUserIds(initiatorId, targetId).ifPresent(friendship -> {
+            switch (friendship.getStatus()) {
+                case PENDING -> throw new FriendshipAlreadyExistsException("Friend request already pending");
+                case ACCEPTED -> throw new FriendshipAlreadyExistsException("Users are already friends");
+                case BLOCKED -> throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
+                case DECLINED -> {} // Allow new request if previous was declined
+            }
+        });
+
         Friendship request = new Friendship();
         request.setUserIdInitiator(initiatorId);
         request.setUserIdTarget(targetId);

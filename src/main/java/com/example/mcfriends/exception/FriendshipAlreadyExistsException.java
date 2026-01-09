@@ -1,0 +1,7 @@
+package com.example.mcfriends.exception;
+
+public class FriendshipAlreadyExistsException extends RuntimeException {
+    public FriendshipAlreadyExistsException(String message) {
+        super(message);
+    }
+}
