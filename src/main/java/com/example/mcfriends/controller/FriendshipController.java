@@ -1,5 +1,6 @@
 package com.example.mcfriends.controller;
 
+import com.example.mcfriends.client.dto.UserDataDetails;
 import com.example.mcfriends.dto.FriendDto;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.service.FriendshipService;
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -24,41 +26,32 @@ public class FriendshipController {
         this.friendshipService = friendshipService;
     }
 
-    private UUID extractUserId(String userIdHeader) {
-        if (userIdHeader == null || userIdHeader.isBlank()) {
-            return UUID.fromString("00000000-0000-0000-0000-000000000001");
-        }
-        return UUID.fromString(userIdHeader);
-    }
-
     @PostMapping("/requests/{targetUserId}")
     public ResponseEntity<Friendship> sendRequest(
             @PathVariable UUID targetUserId,
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
-    ) {
-        UUID initiatorId = extractUserId(userIdHeader);
-        Friendship newRequest = friendshipService.sendFriendRequest(initiatorId, targetUserId);
+            @AuthenticationPrincipal UserDataDetails userDetails
+            ) {
+        Friendship newRequest = friendshipService.sendFriendRequest(userDetails.getUserId(), targetUserId);
         return ResponseEntity.ok(newRequest);
     }
 
     @PutMapping("/requests/{requestId}/accept")
     public ResponseEntity<Friendship> acceptRequest(
             @PathVariable UUID requestId,
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
+            @AuthenticationPrincipal UserDataDetails userDetails
     ) {
-        UUID currentUserId = extractUserId(userIdHeader);
 
-        Friendship accepted = friendshipService.acceptFriendRequest(requestId, currentUserId);
+        Friendship accepted = friendshipService.acceptFriendRequest(requestId, userDetails.getUserId());
         return ResponseEntity.ok(accepted);
     }
 
     @PutMapping("/requests/{requestId}/decline")
     public ResponseEntity<Map<String, String>> declineRequest(
             @PathVariable UUID requestId,
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
+            @AuthenticationPrincipal UserDataDetails userDetails
     ) {
-        UUID currentUserId = extractUserId(userIdHeader);
-        friendshipService.declineFriendRequest(requestId, currentUserId);
+
+        friendshipService.declineFriendRequest(requestId, userDetails.getUserId());
         
         Map<String, String> response = new HashMap<>();
         response.put("message", "Friend request declined");
@@ -67,20 +60,20 @@ public class FriendshipController {
 
     @GetMapping("/requests/incoming")
     public ResponseEntity<Page<FriendDto>> getIncomingRequests(
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader,
+            @AuthenticationPrincipal UserDataDetails userDetails,
             Pageable pageable
     ) {
-        UUID currentUserId = extractUserId(userIdHeader);
-        Page<FriendDto> incomingRequests = friendshipService.getIncomingRequests(currentUserId, pageable);
+
+        Page<FriendDto> incomingRequests = friendshipService.getIncomingRequests(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(incomingRequests);
     }
 
     @GetMapping
     public ResponseEntity<List<FriendDto>> getFriendsList(
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
+            @AuthenticationPrincipal UserDataDetails userDetails
     ) {
-        UUID currentUserId = extractUserId(userIdHeader);
-        List<FriendDto> friends = friendshipService.getAcceptedFriendsDetails(currentUserId);
+
+        List<FriendDto> friends = friendshipService.getAcceptedFriendsDetails(userDetails.getUserId());
         return ResponseEntity.ok(friends);
     }
 
@@ -88,9 +81,11 @@ public class FriendshipController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFriend(
             @PathVariable UUID friendId,
-            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
+            @AuthenticationPrincipal UserDataDetails userDetails
     ) {
-        UUID currentUserId = extractUserId(userIdHeader);
-        friendshipService.deleteFriendship(currentUserId, friendId);
+
+        friendshipService.deleteFriendship(userDetails.getUserId(), friendId);
     }
+
+
 }
