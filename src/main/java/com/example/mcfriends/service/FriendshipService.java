@@ -97,18 +97,29 @@ public class FriendshipService {
         Page<Friendship> requests = friendshipRepository.findByUserIdTargetAndStatus(
                 currentUserId, FriendshipStatus.PENDING, pageable);
 
+        if (requests.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Set<UUID> initiatorIds = requests.stream()
+                .map(Friendship::getUserIdInitiator)
+                .collect(Collectors.toSet());
+
+        Map<UUID, AccountDto> accountMap = new HashMap<>();
+        try {
+            accountMap = accountClient.getAccountsByIds(new ArrayList<>(initiatorIds))
+                    .stream()
+                    .collect(Collectors.toMap(AccountDto::getId, a -> a));
+        } catch (Exception e) {
+            // If account service fails, continue with empty map
+        }
+
+        final Map<UUID, AccountDto> finalAccountMap = accountMap;
         return requests.map(friendship -> {
             IncomingFriendRequestDto dto = new IncomingFriendRequestDto();
             dto.setRequestId(friendship.getId());
             dto.setCreatedAt(friendship.getCreatedAt());
-            
-            try {
-                AccountDto initiatorAccount = accountClient.getAccountById(friendship.getUserIdInitiator());
-                dto.setInitiator(initiatorAccount);
-            } catch (Exception e) {
-                dto.setInitiator(null);
-            }
-            
+            dto.setInitiator(finalAccountMap.get(friendship.getUserIdInitiator()));
             return dto;
         });
     }
