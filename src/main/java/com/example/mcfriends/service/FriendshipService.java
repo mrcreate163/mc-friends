@@ -13,6 +13,7 @@ import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.model.FriendshipStatus;
 import com.example.mcfriends.repository.FriendshipRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -146,7 +147,7 @@ public class FriendshipService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new org.springframework.data.domain.PageImpl<>(
+        return new PageImpl<>(
                 friendDtos,
                 pageable,
                 requests.getTotalElements()
