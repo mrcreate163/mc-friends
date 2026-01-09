@@ -8,13 +8,11 @@
 # - SSH_PRIVATE_KEY       - SSH приватный ключ (masked, file)
 # - POSTGRES_PASSWORD     - Пароль PostgreSQL (masked)
 # - REDIS_PASSWORD        - Пароль Redis (masked)
-# - TELEGRAM_BOT_TOKEN    - Токен Telegram бота (masked)
-# - TELEGRAM_BOT_USERNAME - Username Telegram бота
-# - ADMIN_WHITELIST       - Telegram ID администраторов
+
 
 variables:
   # Имя Docker образа
-  DOCKER_IMAGE: $DOCKER_HUB_USER/mc-admin
+  DOCKER_IMAGE: $DOCKER_HUB_USER/mc-friends
   # Тег образа (по умолчанию - latest)
   DOCKER_TAG: latest
   # Java версия
