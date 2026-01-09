@@ -3,9 +3,9 @@ spring:
     name: mc-friends
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/friends_db
-    username: postgres
-    password: MY_SUPER_NEW_PASSWORD
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/friends_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   liquibase:
