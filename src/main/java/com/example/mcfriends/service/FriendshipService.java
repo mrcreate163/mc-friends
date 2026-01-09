@@ -131,17 +131,26 @@ public class FriendshipService {
                 .stream()
                 .collect(Collectors.toMap(AccountDto::getId, a -> a));
 
-        return requests.map(friendship -> {
-            AccountDto account = accountMap.get(friendship.getUserIdInitiator());
-            if (account == null) {
-                return null;
-            }
+        List<FriendDto> friendDtos = requests.getContent().stream()
+                .map(friendship -> {
+                    AccountDto account = accountMap.get(friendship.getUserIdInitiator());
+                    if (account == null) {
+                        return null;
+                    }
 
-            FriendDto dto = new FriendDto();
-            dto.setAccount(account);
-            dto.setStatus(friendship.getStatus());
-            return dto;
-        });
+                    FriendDto dto = new FriendDto();
+                    dto.setAccount(account);
+                    dto.setStatus(friendship.getStatus());
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new org.springframework.data.domain.PageImpl<>(
+                friendDtos,
+                pageable,
+                requests.getTotalElements()
+        );
     }
 
     public List<Friendship> getAcceptedFriends(UUID userId) {
