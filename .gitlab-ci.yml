@@ -147,17 +147,14 @@ deploy:dev:
       ssh $DEV_SERVER_USER@$DEV_SERVER_HOST \
         "DOCKER_IMAGE='${DOCKER_IMAGE_WITH_TAG}' \
          POSTGRES_PASS='${POSTGRES_PASSWORD}' \
-         TELEGRAM_TOKEN='${TELEGRAM_BOT_TOKEN}' \
-         TELEGRAM_USERNAME='${TELEGRAM_BOT_USERNAME}' \
-         ADMIN_LIST='${ADMIN_WHITELIST}' \
          bash -s" << 'EOF'
       set -e
       echo "📥 Pulling latest image: $DOCKER_IMAGE"
       docker pull "$DOCKER_IMAGE"
 
       echo "🛑 Stopping old container..."
-      docker stop mc-admin || true
-      docker rm mc-admin || true
+      docker stop mc-friends || true
+      docker rm mc-friends || true
 
       echo "🚀 Starting new container..."
       docker run -d \
@@ -205,17 +202,14 @@ deploy:prod:
       ssh $DEV_SERVER_USER@$DEV_SERVER_HOST \
         "DOCKER_IMAGE='${DOCKER_IMAGE_WITH_TAG}' \
          POSTGRES_PASS='${POSTGRES_PASSWORD}' \
-         TELEGRAM_TOKEN='${TELEGRAM_BOT_TOKEN}' \
-         TELEGRAM_USERNAME='${TELEGRAM_BOT_USERNAME}' \
-         ADMIN_LIST='${ADMIN_WHITELIST}' \
          bash -s" << 'EOF'
       set -e
       echo "📥 Pulling latest image: $DOCKER_IMAGE"
       docker pull "$DOCKER_IMAGE"
 
       echo "🛑 Stopping old container..."
-      docker stop mc-admin || true
-      docker rm mc-admin || true
+      docker stop mc-friends || true
+      docker rm mc-friends || true
 
       echo "🚀 Starting new container..."
       docker run -d \
