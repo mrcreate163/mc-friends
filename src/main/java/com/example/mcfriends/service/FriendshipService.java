@@ -44,6 +44,7 @@ public class FriendshipService {
                 case PENDING -> throw new FriendshipAlreadyExistsException("Friend request already pending");
                 case ACCEPTED -> throw new FriendshipAlreadyExistsException("Users are already friends");
                 case BLOCKED -> throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
+                case DECLINED -> {} // Allow new request if previous was declined
             }
         });
 
