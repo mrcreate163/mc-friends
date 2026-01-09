@@ -15,48 +15,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-
-    private static final String[] AUTH_WHITELIST = {
-            // Actuator
-            "/actuator/**",
-
-            // Swagger UI и документация (КРИТИЧЕСКИ ВАЖНЫЕ ПУТИ ДЛЯ РАБОТЫ SWAGGER)
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-            "/webjars/**",
-
-            "/api/v1/friends/**"
-
-    };
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
-
-                        .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                .sessionManagement(sess ->
-                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
-                .exceptionHandling(Customizer.withDefaults());
-
-        return http.build();
+                .addFilter(jwtAuthenticationFilter)
+                .build();
     }
 }

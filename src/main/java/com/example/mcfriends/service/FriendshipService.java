@@ -1,6 +1,6 @@
 package com.example.mcfriends.service;
 
-import com.example.mcfriends.client.AccountServiceClient;
+import com.example.mcfriends.client.AccountClient;
 import com.example.mcfriends.dto.AccountDto;
 import com.example.mcfriends.dto.FriendDto;
 import com.example.mcfriends.exception.ResourceNotFoundException;
@@ -18,16 +18,16 @@ public class FriendshipService {
 
     private final FriendshipRepository friendshipRepository;
     private final KafkaProducerService kafkaProducerService;
-    private final AccountServiceClient accountServiceClient;
+    private final AccountClient accountClient;
 
     public FriendshipService(
             FriendshipRepository friendshipRepository,
             KafkaProducerService kafkaProducerService,
-            AccountServiceClient accountServiceClient
+            AccountClient accountClient
     ) {
         this.friendshipRepository = friendshipRepository;
         this.kafkaProducerService = kafkaProducerService;
-        this.accountServiceClient = accountServiceClient;
+        this.accountClient = accountClient;
     }
 
     public Friendship sendFriendRequest(UUID initiatorId, UUID targetId) {
@@ -102,7 +102,7 @@ public class FriendshipService {
             return List.of();
         }
 
-        Map<UUID, AccountDto> accountMap = accountServiceClient
+        Map<UUID, AccountDto> accountMap = accountClient
                 .getAccountsByIds(new ArrayList<>(friendIds))
                 .stream()
                 .collect(Collectors.toMap(AccountDto::getId, a -> a));
