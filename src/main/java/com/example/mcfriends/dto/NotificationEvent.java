@@ -1,11 +1,15 @@
 package com.example.mcfriends.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.util.UUID;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class NotificationEvent {
-    private final UUID userId;
-    private final String message;
-    private final String type = "FRIEND_ACCEPTED";
+    private String type;
+    private UUID recipientId;
+    private UUID senderId;
 }
