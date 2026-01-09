@@ -1,13 +1,17 @@
 package com.example.mcfriends.controller;
 
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.dto.IncomingFriendRequestDto;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.service.FriendshipService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -46,6 +50,26 @@ public class FriendshipController {
 
         Friendship accepted = friendshipService.acceptFriendRequest(requestId, currentUserId);
         return ResponseEntity.ok(accepted);
+    }
+
+    @PutMapping("/requests/{requestId}/decline")
+    public ResponseEntity<Map<String, String>> declineRequest(
+            @PathVariable UUID requestId,
+            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader
+    ) {
+        UUID currentUserId = extractUserId(userIdHeader);
+        friendshipService.declineFriendRequest(requestId, currentUserId);
+        return ResponseEntity.ok(Map.of("message", "Friend request declined"));
+    }
+
+    @GetMapping("/requests/incoming")
+    public ResponseEntity<Page<IncomingFriendRequestDto>> getIncomingRequests(
+            @RequestHeader(value = "X-USER-ID", required = false) String userIdHeader,
+            Pageable pageable
+    ) {
+        UUID currentUserId = extractUserId(userIdHeader);
+        Page<IncomingFriendRequestDto> incomingRequests = friendshipService.getIncomingFriendRequests(currentUserId, pageable);
+        return ResponseEntity.ok(incomingRequests);
     }
 
     @GetMapping

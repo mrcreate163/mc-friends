@@ -3,10 +3,16 @@ package com.example.mcfriends.service;
 import com.example.mcfriends.client.AccountClient;
 import com.example.mcfriends.dto.AccountDto;
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.dto.IncomingFriendRequestDto;
+import com.example.mcfriends.dto.NotificationEvent;
+import com.example.mcfriends.exception.BadRequestException;
+import com.example.mcfriends.exception.ForbiddenException;
 import com.example.mcfriends.exception.ResourceNotFoundException;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.model.FriendshipStatus;
 import com.example.mcfriends.repository.FriendshipRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -60,6 +66,51 @@ public class FriendshipService {
         kafkaProducerService.sendNotification(userToNotify, "Ваш запрос в друзья был принят!");
 
         return accepted;
+    }
+
+    public Friendship declineFriendRequest(UUID requestId, UUID currentUserId) {
+        Friendship request = friendshipRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Запрос на дружбу с ID " + requestId + " не найден"));
+
+        if (!request.getUserIdTarget().equals(currentUserId)) {
+            throw new ForbiddenException("Доступ запрещен: Только целевой пользователь может отклонить этот запрос.");
+        }
+
+        if (request.getStatus() != FriendshipStatus.PENDING) {
+            throw new BadRequestException("Запрос уже обработан");
+        }
+
+        request.setStatus(FriendshipStatus.DECLINED);
+        request.setUpdatedAt(LocalDateTime.now());
+        Friendship declined = friendshipRepository.save(request);
+
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_REQUEST_DECLINED");
+        event.setRecipientId(declined.getUserIdInitiator());
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendAccountChangesEvent(event);
+
+        return declined;
+    }
+
+    public Page<IncomingFriendRequestDto> getIncomingFriendRequests(UUID currentUserId, Pageable pageable) {
+        Page<Friendship> requests = friendshipRepository.findByUserIdTargetAndStatus(
+                currentUserId, FriendshipStatus.PENDING, pageable);
+
+        return requests.map(friendship -> {
+            IncomingFriendRequestDto dto = new IncomingFriendRequestDto();
+            dto.setRequestId(friendship.getId());
+            dto.setCreatedAt(friendship.getCreatedAt());
+            
+            try {
+                AccountDto initiatorAccount = accountClient.getAccountById(friendship.getUserIdInitiator());
+                dto.setInitiator(initiatorAccount);
+            } catch (Exception e) {
+                dto.setInitiator(null);
+            }
+            
+            return dto;
+        });
     }
 
     public List<Friendship> getAcceptedFriends(UUID userId) {
