@@ -26,4 +26,9 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
                                        @Param("userId2") UUID userId2);
 
     Page<Friendship> findByUserIdTargetAndStatus(UUID userIdTarget, FriendshipStatus status, Pageable pageable);
+
+    @Query("SELECT COUNT(f) FROM Friendship f WHERE " +
+           "f.status = :status AND " +
+           "(f.userIdInitiator = :userId OR f.userIdTarget = :userId)")
+    Long countByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") FriendshipStatus status);
 }

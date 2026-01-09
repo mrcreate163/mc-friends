@@ -1,7 +1,9 @@
 package com.example.mcfriends.controller;
 
 import com.example.mcfriends.client.dto.UserDataDetails;
+import com.example.mcfriends.dto.FriendCountDto;
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.dto.FriendshipStatusDto;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.service.FriendshipService;
 import org.springframework.data.domain.Page;
@@ -85,6 +87,34 @@ public class FriendshipController {
     ) {
 
         friendshipService.deleteFriendship(userDetails.getUserId(), friendId);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<FriendCountDto> getFriendCount(
+            @AuthenticationPrincipal UserDataDetails userDetails
+    ) {
+        Long count = friendshipService.getFriendCount(userDetails.getUserId());
+        FriendCountDto dto = new FriendCountDto();
+        dto.setCount(count);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{userId}/status")
+    public ResponseEntity<FriendshipStatusDto> getFriendshipStatus(
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal UserDataDetails userDetails
+    ) {
+        FriendshipStatusDto status = friendshipService.getFriendshipStatus(userDetails.getUserId(), userId);
+        return ResponseEntity.ok(status);
+    }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<Page<FriendDto>> getRecommendations(
+            @AuthenticationPrincipal UserDataDetails userDetails,
+            Pageable pageable
+    ) {
+        // Stub: returns empty page
+        return ResponseEntity.ok(Page.empty(pageable));
     }
 
 
