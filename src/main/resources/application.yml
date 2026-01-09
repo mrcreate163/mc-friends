@@ -18,6 +18,9 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+client:
+  auth: "http://mc-auth:8081"
+
 eureka:
   client:
     service-url:
@@ -28,7 +31,7 @@ eureka:
     prefer-ip-address: true
 
 server:
-  port: 8083
+  port: 8092
 
 springdoc:
   packagesToScan: com.example.mcfriends.controller
