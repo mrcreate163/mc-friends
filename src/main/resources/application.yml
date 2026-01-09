@@ -13,11 +13,12 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:29092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
+      properties:
+        spring.json.type.mapping: userRegistered:com.socialnetwork.auth.dto.kafka.UserRegisteredEvent
 client:
   auth: "http://mc-auth:8081"
 services:
@@ -27,17 +28,60 @@ services:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
-    enabled: true
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
   instance:
-    instance-id: ${spring.application.name}:${instance.id:${random.value}}
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
 server:
   port: 8092
 
 springdoc:
   packagesToScan: com.example.mcfriends.controller
+
+logging:
+  level:
+    # Ваше приложение - максимальная детализация
+    com.example.mcfriends: DEBUG
+
+    # Spring Security
+    org.springframework.security: DEBUG
+
+    # Для отладки SQL запросов и транзакций
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.transaction: DEBUG
+
+    # Spring Web (запросы/ответы)
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: DEBUG
+
+    # Kafka
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: WARN
+
+    # Redis
+    org.springframework.data.redis: DEBUG
+
+    # Общие ошибки Spring
+    org.springframework: WARN
+
+  # Паттерн с трейсом ошибок
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n%throwable"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{40} - %msg%n%throwable"
+
+  # Запись в файл
+  file:
+    name: logs/auth-service.log
+    max-size: 10MB
+    max-history: 30
+
+  # Включить полный стек-трейс исключений
+  exception-conversion-word: "%wEx"
+
 
 management:
   endpoints:
