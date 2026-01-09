@@ -3,6 +3,7 @@ package com.example.mcfriends.service;
 import com.example.mcfriends.client.AccountClient;
 import com.example.mcfriends.dto.AccountDto;
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.dto.FriendshipStatusDto;
 import com.example.mcfriends.dto.NotificationEvent;
 import com.example.mcfriends.exception.ForbiddenException;
 import com.example.mcfriends.exception.FriendshipAlreadyExistsException;
@@ -217,5 +218,46 @@ public class FriendshipService {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    public Long getFriendCount(UUID userId) {
+        return friendshipRepository.countByUserIdAndStatus(userId, FriendshipStatus.ACCEPTED);
+    }
+
+    public FriendshipStatusDto getFriendshipStatus(UUID currentUserId, UUID targetUserId) {
+        FriendshipStatusDto dto = new FriendshipStatusDto();
+        dto.setUserId(targetUserId);
+
+        Optional<Friendship> friendshipOpt = friendshipRepository.findByUserIds(currentUserId, targetUserId);
+
+        if (friendshipOpt.isEmpty()) {
+            dto.setStatusCode("NONE");
+            dto.setFriendship(null);
+            return dto;
+        }
+
+        Friendship friendship = friendshipOpt.get();
+        dto.setFriendship(friendship);
+
+        switch (friendship.getStatus()) {
+            case ACCEPTED:
+                dto.setStatusCode("FRIEND");
+                break;
+            case PENDING:
+                if (friendship.getUserIdTarget().equals(currentUserId)) {
+                    dto.setStatusCode("PENDING_INCOMING");
+                } else {
+                    dto.setStatusCode("PENDING_OUTGOING");
+                }
+                break;
+            case BLOCKED:
+                dto.setStatusCode("BLOCKED");
+                break;
+            default:
+                dto.setStatusCode("NONE");
+                break;
+        }
+
+        return dto;
     }
 }
