@@ -39,19 +39,13 @@ public class FriendshipService {
         }
 
         // Check if friendship already exists
-        Optional<Friendship> existingFriendship = friendshipRepository.findByUserIds(initiatorId, targetId);
-        if (existingFriendship.isPresent()) {
-            Friendship friendship = existingFriendship.get();
-            FriendshipStatus status = friendship.getStatus();
-            
-            if (status == FriendshipStatus.PENDING) {
-                throw new FriendshipAlreadyExistsException("Friend request already pending");
-            } else if (status == FriendshipStatus.ACCEPTED) {
-                throw new FriendshipAlreadyExistsException("Users are already friends");
-            } else if (status == FriendshipStatus.BLOCKED) {
-                throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
+        friendshipRepository.findByUserIds(initiatorId, targetId).ifPresent(friendship -> {
+            switch (friendship.getStatus()) {
+                case PENDING -> throw new FriendshipAlreadyExistsException("Friend request already pending");
+                case ACCEPTED -> throw new FriendshipAlreadyExistsException("Users are already friends");
+                case BLOCKED -> throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
             }
-        }
+        });
 
         Friendship request = new Friendship();
         request.setUserIdInitiator(initiatorId);
