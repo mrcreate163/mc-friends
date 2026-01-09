@@ -1,0 +1,17 @@
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/McFriendsApplication.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/client/AccountServiceClient.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/config/OpenApiConfig.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/controller/FriendshipController.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/dto/AccountDto.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/dto/FriendDto.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/dto/FriendRequestDto.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/dto/NotificationEvent.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/exception/GlobalExceptionHandler.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/exception/ResourceNotFoundException.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/model/Friendship.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/model/FriendshipStatus.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/repository/FriendshipRepository.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/security/JwtAuthFilter.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/security/SecurityConfig.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/service/FriendshipService.java
+/home/runner/work/mc-friends/mc-friends/src/main/java/com/example/mcfriends/service/KafkaProducerService.java
