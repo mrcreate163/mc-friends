@@ -8,7 +8,7 @@ import java.util.UUID;
 @Service
 public class KafkaProducerService {
 
-    private static final String NOTIFICATION_TOPIC = "NOTIFICATION";
+    private static final String NOTIFICATION_TOPIC = "ACCOUNT_CHANGES";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -16,8 +16,7 @@ public class KafkaProducerService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendNotification(UUID userId, String message) {
-        NotificationEvent event = new NotificationEvent(userId, message);
-        kafkaTemplate.send(NOTIFICATION_TOPIC, userId.toString(), event);
+    public void sendNotification(NotificationEvent event) {
+        kafkaTemplate.send(NOTIFICATION_TOPIC, event.getRecipientId().toString(), event);
     }
 }

@@ -3,12 +3,17 @@ package com.example.mcfriends.service;
 import com.example.mcfriends.client.AccountClient;
 import com.example.mcfriends.dto.AccountDto;
 import com.example.mcfriends.dto.FriendDto;
+import com.example.mcfriends.dto.NotificationEvent;
+import com.example.mcfriends.exception.ForbiddenException;
 import com.example.mcfriends.exception.FriendshipAlreadyExistsException;
+import com.example.mcfriends.exception.InvalidStatusException;
 import com.example.mcfriends.exception.ResourceNotFoundException;
 import com.example.mcfriends.exception.SelfFriendshipException;
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.model.FriendshipStatus;
 import com.example.mcfriends.repository.FriendshipRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -61,22 +66,82 @@ public class FriendshipService {
                 .orElseThrow(() -> new ResourceNotFoundException("Запрос на дружбу с ID " + requestId + " не найден"));
 
         if (!request.getUserIdTarget().equals(currentUserId)) {
-
-            throw new RuntimeException("Доступ запрещен: Только целевой пользователь может принять этот запрос.");
+            throw new ForbiddenException("Доступ запрещен: Только целевой пользователь может принять этот запрос.");
         }
 
         if (request.getStatus() != FriendshipStatus.PENDING) {
-            throw new RuntimeException("Запрос уже обработан");
+            throw new InvalidStatusException("Запрос уже обработан");
         }
 
         request.setStatus(FriendshipStatus.ACCEPTED);
         request.setUpdatedAt(LocalDateTime.now());
         Friendship accepted = friendshipRepository.save(request);
 
-        UUID userToNotify = accepted.getUserIdInitiator();
-        kafkaProducerService.sendNotification(userToNotify, "Ваш запрос в друзья был принят!");
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_REQUEST_ACCEPTED");
+        event.setRecipientId(accepted.getUserIdInitiator());
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendNotification(event);
 
         return accepted;
+    }
+
+    public Friendship declineFriendRequest(UUID requestId, UUID currentUserId) {
+        Friendship request = friendshipRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Запрос на дружбу с ID " + requestId + " не найден"));
+
+        if (!request.getUserIdTarget().equals(currentUserId)) {
+            throw new ForbiddenException("Доступ запрещен: Только целевой пользователь может отклонить этот запрос.");
+        }
+
+        if (request.getStatus() != FriendshipStatus.PENDING) {
+            throw new InvalidStatusException("Запрос уже обработан");
+        }
+
+        request.setStatus(FriendshipStatus.DECLINED);
+        request.setUpdatedAt(LocalDateTime.now());
+        Friendship declined = friendshipRepository.save(request);
+
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_REQUEST_DECLINED");
+        event.setRecipientId(declined.getUserIdInitiator());
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendNotification(event);
+
+        return declined;
+    }
+
+    public Page<FriendDto> getIncomingRequests(UUID currentUserId, Pageable pageable) {
+        Page<Friendship> requests = friendshipRepository.findByUserIdTargetAndStatus(
+                currentUserId, 
+                FriendshipStatus.PENDING, 
+                pageable
+        );
+
+        Set<UUID> initiatorIds = requests.getContent().stream()
+                .map(Friendship::getUserIdInitiator)
+                .collect(Collectors.toSet());
+
+        if (initiatorIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Map<UUID, AccountDto> accountMap = accountClient
+                .getAccountsByIds(new ArrayList<>(initiatorIds))
+                .stream()
+                .collect(Collectors.toMap(AccountDto::getId, a -> a));
+
+        return requests.map(friendship -> {
+            AccountDto account = accountMap.get(friendship.getUserIdInitiator());
+            if (account == null) {
+                return null;
+            }
+
+            FriendDto dto = new FriendDto();
+            dto.setAccount(account);
+            dto.setStatus(friendship.getStatus());
+            return dto;
+        });
     }
 
     public List<Friendship> getAcceptedFriends(UUID userId) {

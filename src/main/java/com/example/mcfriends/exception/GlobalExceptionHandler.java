@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), request, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorDetails> handleForbidden(ForbiddenException ex, WebRequest request) {
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(InvalidStatusException.class)
+    public ResponseEntity<ErrorDetails> handleInvalidStatus(InvalidStatusException ex, WebRequest request) {
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorDetails> handleGeneralRuntimeException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);

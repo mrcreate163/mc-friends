@@ -2,6 +2,8 @@ package com.example.mcfriends.repository;
 
 import com.example.mcfriends.model.Friendship;
 import com.example.mcfriends.model.FriendshipStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,6 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
            "(f.userIdInitiator = :userId2 AND f.userIdTarget = :userId1)")
     Optional<Friendship> findByUserIds(@Param("userId1") UUID userId1, 
                                        @Param("userId2") UUID userId2);
+
+    Page<Friendship> findByUserIdTargetAndStatus(UUID userIdTarget, FriendshipStatus status, Pageable pageable);
 }
