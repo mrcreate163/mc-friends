@@ -72,7 +72,7 @@ build:
     - docker info
   script:
     - echo "🔨 Building Docker image..."
-    - docker build -t $DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker build -no-cache --pull -t $DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA .
     - docker tag $DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_IMAGE:$DOCKER_TAG
     # Сохраняем образ для следующей стадии
     - docker save $DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA > image.tar
