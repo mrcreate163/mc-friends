@@ -26,53 +26,37 @@ public class GlobalExceptionHandler {
         public String getDetails() { return details; }
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+    private ResponseEntity<ErrorDetails> buildErrorResponse(String message, WebRequest request, HttpStatus status) {
         ErrorDetails errorDetails = new ErrorDetails(
                 LocalDateTime.now(),
-                ex.getMessage(),
+                message,
                 request.getDescription(false)
         );
-        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorDetails, status);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(SelfFriendshipException.class)
     public ResponseEntity<ErrorDetails> handleSelfFriendship(SelfFriendshipException ex, WebRequest request) {
-        ErrorDetails errorDetails = new ErrorDetails(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(FriendshipAlreadyExistsException.class)
     public ResponseEntity<ErrorDetails> handleFriendshipExists(FriendshipAlreadyExistsException ex, WebRequest request) {
-        ErrorDetails errorDetails = new ErrorDetails(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorDetails> handleGeneralRuntimeException(RuntimeException ex, WebRequest request) {
-        ErrorDetails errorDetails = new ErrorDetails(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGlobalException(Exception ex, WebRequest request) {
-        ErrorDetails errorDetails = new ErrorDetails(
-                LocalDateTime.now(),
-                "Произошла внутренняя ошибка сервера",
-                request.getDescription(false)
-        );
-        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildErrorResponse("Произошла внутренняя ошибка сервера", request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
