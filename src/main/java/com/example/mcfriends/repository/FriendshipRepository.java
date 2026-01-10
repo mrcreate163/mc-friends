@@ -38,4 +38,23 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
            "f.status = :status AND " +
            "(f.userIdInitiator = :userId OR f.userIdTarget = :userId)")
     Long countByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") FriendshipStatus status);
+
+    // For block/unblock operations
+    Optional<Friendship> findByUserIdInitiatorAndUserIdTargetAndStatus(
+            UUID initiatorId, UUID targetId, FriendshipStatus status
+    );
+
+    // For getting friend IDs
+    @Query("SELECT CASE WHEN f.userIdInitiator = :userId THEN f.userIdTarget " +
+           "ELSE f.userIdInitiator END " +
+           "FROM Friendship f WHERE f.status = :status AND " +
+           "(f.userIdInitiator = :userId OR f.userIdTarget = :userId)")
+    List<UUID> findFriendIdsByUserId(@Param("userId") UUID userId,
+                                      @Param("status") FriendshipStatus status);
+
+    // For getting blocked user IDs where current user is initiator
+    @Query("SELECT f.userIdTarget FROM Friendship f WHERE " +
+           "f.status = :status AND f.userIdInitiator = :userId")
+    List<UUID> findBlockedUserIdsByInitiator(@Param("userId") UUID userId,
+                                              @Param("status") FriendshipStatus status);
 }
