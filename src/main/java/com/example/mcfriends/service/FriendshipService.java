@@ -185,39 +185,7 @@ public class FriendshipService {
                 pageable
         );
 
-        Set<UUID> friendIds = friendships.getContent().stream()
-                .map(f -> f.getUserIdInitiator().equals(userId)
-                        ? f.getUserIdTarget()
-                        : f.getUserIdInitiator())
-                .collect(Collectors.toSet());
-
-        if (friendIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        Map<UUID, AccountDto> accountMap = accountClient
-                .getAccountsByIds(new ArrayList<>(friendIds))
-                .stream()
-                .collect(Collectors.toMap(AccountDto::getId, a -> a));
-
-        List<FriendDto> friendDtos = friendships.getContent().stream()
-                .map(f -> {
-                    UUID friendId = f.getUserIdInitiator().equals(userId)
-                            ? f.getUserIdTarget()
-                            : f.getUserIdInitiator();
-
-                    AccountDto account = accountMap.get(friendId);
-                    if (account == null) {
-                        return null;
-                    }
-
-                    FriendDto dto = new FriendDto();
-                    dto.setAccount(account);
-                    dto.setStatus(f.getStatus());
-                    return dto;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        List<FriendDto> friendDtos = mapFriendshipsToFriendDtos(userId, friendships.getContent());
 
         return new PageImpl<>(
                 friendDtos,
@@ -233,10 +201,18 @@ public class FriendshipService {
                         userId, FriendshipStatus.ACCEPTED
                 );
 
+        return mapFriendshipsToFriendDtos(userId, friendships);
+    }
+
+    private UUID getOtherUserId(UUID userId, Friendship friendship) {
+        return friendship.getUserIdInitiator().equals(userId)
+                ? friendship.getUserIdTarget()
+                : friendship.getUserIdInitiator();
+    }
+
+    private List<FriendDto> mapFriendshipsToFriendDtos(UUID userId, List<Friendship> friendships) {
         Set<UUID> friendIds = friendships.stream()
-                .map(f -> f.getUserIdInitiator().equals(userId)
-                        ? f.getUserIdTarget()
-                        : f.getUserIdInitiator())
+                .map(f -> getOtherUserId(userId, f))
                 .collect(Collectors.toSet());
 
         if (friendIds.isEmpty()) {
@@ -250,10 +226,7 @@ public class FriendshipService {
 
         return friendships.stream()
                 .map(f -> {
-                    UUID friendId = f.getUserIdInitiator().equals(userId)
-                            ? f.getUserIdTarget()
-                            : f.getUserIdInitiator();
-
+                    UUID friendId = getOtherUserId(userId, f);
                     AccountDto account = accountMap.get(friendId);
                     if (account == null) {
                         return null;
