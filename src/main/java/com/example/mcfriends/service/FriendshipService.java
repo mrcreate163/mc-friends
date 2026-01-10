@@ -52,6 +52,7 @@ public class FriendshipService {
                 case ACCEPTED -> throw new FriendshipAlreadyExistsException("Users are already friends");
                 case BLOCKED -> throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
                 case DECLINED -> {} // Allow new request if previous was declined
+                case SUBSCRIBED -> {} // Allow upgrading subscription to friend request
             }
         });
 
@@ -277,8 +278,111 @@ public class FriendshipService {
             case DECLINED:
                 dto.setStatusCode("NONE");
                 break;
+            case SUBSCRIBED:
+                dto.setStatusCode("SUBSCRIBED");
+                break;
         }
 
         return dto;
+    }
+
+    public void blockUser(UUID currentUserId, UUID targetUserId) {
+        // Validate: Cannot block yourself
+        if (currentUserId.equals(targetUserId)) {
+            throw new SelfFriendshipException();
+        }
+
+        // Find existing relationship between users
+        Optional<Friendship> existingFriendship = friendshipRepository.findByUserIds(currentUserId, targetUserId);
+
+        if (existingFriendship.isPresent()) {
+            // Update existing relationship to BLOCKED
+            Friendship friendship = existingFriendship.get();
+            friendship.setStatus(FriendshipStatus.BLOCKED);
+            friendship.setUserIdInitiator(currentUserId);
+            friendship.setUserIdTarget(targetUserId);
+            friendship.setUpdatedAt(LocalDateTime.now());
+            friendshipRepository.save(friendship);
+        } else {
+            // Create new BLOCKED relationship
+            Friendship friendship = new Friendship();
+            friendship.setUserIdInitiator(currentUserId);
+            friendship.setUserIdTarget(targetUserId);
+            friendship.setStatus(FriendshipStatus.BLOCKED);
+            friendship.setCreatedAt(LocalDateTime.now());
+            friendshipRepository.save(friendship);
+        }
+
+        // Send Kafka event
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_BLOCKED");
+        event.setRecipientId(targetUserId);
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendNotification(event);
+    }
+
+    public void unblockUser(UUID currentUserId, UUID targetUserId) {
+        // Find BLOCKED relationship where current user is initiator
+        Optional<Friendship> blockedFriendship = friendshipRepository
+                .findByUserIdInitiatorAndUserIdTargetAndStatus(
+                        currentUserId, targetUserId, FriendshipStatus.BLOCKED
+                );
+
+        if (blockedFriendship.isEmpty()) {
+            throw new ResourceNotFoundException("Блокировка не найдена");
+        }
+
+        Friendship friendship = blockedFriendship.get();
+        
+        // Verify current user is the initiator
+        if (!friendship.getUserIdInitiator().equals(currentUserId)) {
+            throw new ForbiddenException("Вы не являетесь инициатором блокировки");
+        }
+
+        // Delete the blocked relationship
+        friendshipRepository.delete(friendship);
+
+        // Send Kafka event
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_UNBLOCKED");
+        event.setRecipientId(targetUserId);
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendNotification(event);
+    }
+
+    public void subscribeToUser(UUID currentUserId, UUID targetUserId) {
+        // Validate: Cannot subscribe to yourself
+        if (currentUserId.equals(targetUserId)) {
+            throw new SelfFriendshipException();
+        }
+
+        // Check if relationship already exists
+        Optional<Friendship> existingFriendship = friendshipRepository.findByUserIds(currentUserId, targetUserId);
+        if (existingFriendship.isPresent()) {
+            throw new FriendshipAlreadyExistsException("Связь с пользователем уже существует");
+        }
+
+        // Create new SUBSCRIBED relationship
+        Friendship subscription = new Friendship();
+        subscription.setUserIdInitiator(currentUserId);
+        subscription.setUserIdTarget(targetUserId);
+        subscription.setStatus(FriendshipStatus.SUBSCRIBED);
+        subscription.setCreatedAt(LocalDateTime.now());
+        friendshipRepository.save(subscription);
+
+        // Send Kafka event
+        NotificationEvent event = new NotificationEvent();
+        event.setType("FRIEND_SUBSCRIBED");
+        event.setRecipientId(targetUserId);
+        event.setSenderId(currentUserId);
+        kafkaProducerService.sendNotification(event);
+    }
+
+    public List<UUID> getFriendIds(UUID userId) {
+        return friendshipRepository.findFriendIdsByUserId(userId, FriendshipStatus.ACCEPTED);
+    }
+
+    public List<UUID> getBlockedUserIds(UUID userId) {
+        return friendshipRepository.findBlockedUserIdsByInitiator(userId, FriendshipStatus.BLOCKED);
     }
 }
