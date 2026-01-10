@@ -28,7 +28,7 @@ public class FriendshipController {
         this.friendshipService = friendshipService;
     }
 
-    @PostMapping("/requests/{targetUserId}")
+    @PostMapping("/{targetUserId}/request")
     public ResponseEntity<Friendship> sendRequest(
             @PathVariable UUID targetUserId,
             @AuthenticationPrincipal UserDataDetails userDetails
@@ -37,7 +37,7 @@ public class FriendshipController {
         return ResponseEntity.ok(newRequest);
     }
 
-    @PutMapping("/requests/{requestId}/accept")
+    @PutMapping("/{requestId}/approve")
     public ResponseEntity<Friendship> acceptRequest(
             @PathVariable UUID requestId,
             @AuthenticationPrincipal UserDataDetails userDetails
