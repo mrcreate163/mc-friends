@@ -71,11 +71,12 @@ public class FriendshipController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FriendDto>> getFriendsList(
-            @AuthenticationPrincipal UserDataDetails userDetails
+    public ResponseEntity<Page<FriendDto>> getFriendsList(
+            @AuthenticationPrincipal UserDataDetails userDetails,
+            Pageable pageable
     ) {
 
-        List<FriendDto> friends = friendshipService.getAcceptedFriendsDetails(userDetails.getUserId());
+        Page<FriendDto> friends = friendshipService.getAcceptedFriendsDetails(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(friends);
     }
 

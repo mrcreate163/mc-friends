@@ -178,6 +178,54 @@ public class FriendshipService {
         friendshipRepository.delete(friendship);
     }
 
+    public Page<FriendDto> getAcceptedFriendsDetails(UUID userId, Pageable pageable) {
+        Page<Friendship> friendships = friendshipRepository.findByUserIdAndStatus(
+                userId, 
+                FriendshipStatus.ACCEPTED,
+                pageable
+        );
+
+        Set<UUID> friendIds = friendships.getContent().stream()
+                .map(f -> f.getUserIdInitiator().equals(userId)
+                        ? f.getUserIdTarget()
+                        : f.getUserIdInitiator())
+                .collect(Collectors.toSet());
+
+        if (friendIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Map<UUID, AccountDto> accountMap = accountClient
+                .getAccountsByIds(new ArrayList<>(friendIds))
+                .stream()
+                .collect(Collectors.toMap(AccountDto::getId, a -> a));
+
+        List<FriendDto> friendDtos = friendships.getContent().stream()
+                .map(f -> {
+                    UUID friendId = f.getUserIdInitiator().equals(userId)
+                            ? f.getUserIdTarget()
+                            : f.getUserIdInitiator();
+
+                    AccountDto account = accountMap.get(friendId);
+                    if (account == null) {
+                        return null;
+                    }
+
+                    FriendDto dto = new FriendDto();
+                    dto.setAccount(account);
+                    dto.setStatus(f.getStatus());
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(
+                friendDtos,
+                pageable,
+                friendships.getTotalElements()
+        );
+    }
+
     public List<FriendDto> getAcceptedFriendsDetails(UUID userId) {
         List<Friendship> friendships =
                 friendshipRepository.findByUserIdInitiatorAndStatusOrUserIdTargetAndStatus(
