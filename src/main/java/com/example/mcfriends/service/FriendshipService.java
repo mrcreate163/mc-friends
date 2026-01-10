@@ -52,6 +52,7 @@ public class FriendshipService {
                 case ACCEPTED -> throw new FriendshipAlreadyExistsException("Users are already friends");
                 case BLOCKED -> throw new FriendshipAlreadyExistsException("Cannot send friend request: user is blocked");
                 case DECLINED -> {} // Allow new request if previous was declined
+                case SUBSCRIBED -> {} // Allow upgrading subscription to friend request
             }
         });
 
@@ -276,6 +277,9 @@ public class FriendshipService {
                 break;
             case DECLINED:
                 dto.setStatusCode("NONE");
+                break;
+            case SUBSCRIBED:
+                dto.setStatusCode("SUBSCRIBED");
                 break;
         }
 
