@@ -178,6 +178,22 @@ public class FriendshipService {
         friendshipRepository.delete(friendship);
     }
 
+    public Page<FriendDto> getAcceptedFriendsDetails(UUID userId, Pageable pageable) {
+        Page<Friendship> friendships = friendshipRepository.findByUserIdAndStatus(
+                userId, 
+                FriendshipStatus.ACCEPTED,
+                pageable
+        );
+
+        List<FriendDto> friendDtos = mapFriendshipsToFriendDtos(userId, friendships.getContent());
+
+        return new PageImpl<>(
+                friendDtos,
+                pageable,
+                friendships.getTotalElements()
+        );
+    }
+
     public List<FriendDto> getAcceptedFriendsDetails(UUID userId) {
         List<Friendship> friendships =
                 friendshipRepository.findByUserIdInitiatorAndStatusOrUserIdTargetAndStatus(
@@ -185,10 +201,18 @@ public class FriendshipService {
                         userId, FriendshipStatus.ACCEPTED
                 );
 
+        return mapFriendshipsToFriendDtos(userId, friendships);
+    }
+
+    private UUID getOtherUserId(UUID userId, Friendship friendship) {
+        return friendship.getUserIdInitiator().equals(userId)
+                ? friendship.getUserIdTarget()
+                : friendship.getUserIdInitiator();
+    }
+
+    private List<FriendDto> mapFriendshipsToFriendDtos(UUID userId, List<Friendship> friendships) {
         Set<UUID> friendIds = friendships.stream()
-                .map(f -> f.getUserIdInitiator().equals(userId)
-                        ? f.getUserIdTarget()
-                        : f.getUserIdInitiator())
+                .map(f -> getOtherUserId(userId, f))
                 .collect(Collectors.toSet());
 
         if (friendIds.isEmpty()) {
@@ -202,10 +226,7 @@ public class FriendshipService {
 
         return friendships.stream()
                 .map(f -> {
-                    UUID friendId = f.getUserIdInitiator().equals(userId)
-                            ? f.getUserIdTarget()
-                            : f.getUserIdInitiator();
-
+                    UUID friendId = getOtherUserId(userId, f);
                     AccountDto account = accountMap.get(friendId);
                     if (account == null) {
                         return null;
