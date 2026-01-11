@@ -1,92 +1,472 @@
-# mc-friends
+# mc-friends - Микросервис управления дружескими связями
 
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+## 📋 Описание
 
-## Getting started
+Микросервис для управления дружескими связями в социальной сети. Обрабатывает:
+- Отправку/принятие/отклонение заявок в друзья
+- Управление списком друзей
+- Блокировку/разблокировку пользователей
+- Подписки на пользователей
+- Получение рекомендаций друзей (в разработке)
+- Интеграцию с другими сервисами через Kafka и REST API
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Часть микросервисной архитектуры социальной сети команды **mc-friends Team**.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+---
 
-## Add your files
+## 🏗️ Архитектура
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+### Взаимодействие с другими сервисами:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.skillbox.ru/bexultan_kuatov/mc-friends.git
-git branch -M master
-git push -uf origin master
+┌─────────────────┐
+│   API Gateway   │
+└────────┬────────┘
+         │
+┌────────▼─────────────┐
+│   mc-friends         │
+│  (этот сервис)       │
+└──┬──────────────┬────┘
+   │              │
+┌──▼───┐     ┌───▼─────┐
+│ Kafka│     │PostgreSQL│
+└──────┘     └──────────┘
 ```
 
-## Integrate with your tools
+### Стек технологий:
+- **Java 17** (LTS)
+- **Spring Boot 3.2.0**
+- **Spring Data JPA** - работа с базой данных
+- **PostgreSQL 15** - основное хранилище данных
+- **Apache Kafka** - асинхронная коммуникация между сервисами
+- **Spring Security** (JWT) - аутентификация и авторизация
+- **Spring Cloud OpenFeign** - HTTP клиент для межсервисной коммуникации
+- **Lombok** - уменьшение boilerplate кода
+- **Liquibase** - миграции базы данных
+- **SpringDoc OpenAPI** - документация API
+- **JUnit 5 + Mockito** - тестирование
 
-- [ ] [Set up project integrations](https://gitlab.skillbox.ru/bexultan_kuatov/mc-friends/-/settings/integrations)
+---
 
-## Collaborate with your team
+## 🚀 Быстрый старт
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Требования:
+- Java 17+
+- Maven 3.9+
+- Docker & Docker Compose (для зависимостей)
+- PostgreSQL 15+ (или через Docker)
+- Kafka 3.5+ (или через Docker)
 
-## Test and Deploy
+### Установка:
 
-Use the built-in continuous integration in GitLab.
+#### 1. Клонировать репозиторий
+```bash
+git clone https://github.com/mrcreate163/mc-friends.git
+cd mc-friends
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+#### 2. Настроить переменные окружения
 
-***
+```bash
+cp .env.example .env
+# Отредактировать .env файл с вашими настройками
+```
 
-# Editing this README
+#### 3. Запустить зависимости через Docker Compose
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```bash
+docker-compose up -d postgres kafka zookeeper
+```
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+#### 4. Собрать проект
 
-## Name
-Choose a self-explaining name for your project.
+```bash
+mvn clean install
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+#### 5. Запустить приложение
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```bash
+mvn spring-boot:run
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Сервис будет доступен по адресу: `http://localhost:8092`
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Swagger UI (документация API): `http://localhost:8092/swagger-ui.html`
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+---
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## ⚙️ Конфигурация
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Переменные окружения:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+| Переменная | Описание | Значение по умолчанию |
+|:--|:--|:--|
+| `SERVER_PORT` | Порт сервера | `8092` |
+| `SPRING_DATASOURCE_URL` | URL PostgreSQL | `jdbc:postgresql://postgres:5432/friends_db` |
+| `SPRING_DATASOURCE_USERNAME` | Пользователь БД | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | Пароль БД | `postgres` |
+| `KAFKA_BOOTSTRAP_SERVERS` | Адреса Kafka брокеров | `kafka:29092` |
+| `ACCOUNT_SERVICE_URL` | URL account-service | `http://localhost:8080/internal/account` |
+| `EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE` | URL Eureka Server | `http://eureka-server:8761/eureka/` |
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### Профили Spring:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+- `dev` - локальная разработка (встроенные зависимости)
+- `test` - для запуска тестов (H2, embedded Kafka)
+- `prod` - production окружение (внешние зависимости)
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Активация профиля:
 
-## License
-For open source projects, say how it is licensed.
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+---
+
+## 📡 API Endpoints
+
+### Базовый URL: `/api/v1/friends`
+
+Все эндпоинты требуют JWT токен в заголовке:
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+#### Управление заявками в друзья:
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `POST` | `/{targetUserId}/request` | Отправить заявку в друзья |
+| `PUT` | `/{requestId}/approve` | Принять заявку |
+| `PUT` | `/requests/{requestId}/decline` | Отклонить заявку |
+| `DELETE` | `/requests/{requestId}` | Отменить свою заявку |
+
+#### Управление друзьями:
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `GET` | `/` | Получить список друзей (с пагинацией) |
+| `DELETE` | `/{friendId}` | Удалить из друзей |
+| `GET` | `/count` | Получить количество друзей |
+| `GET` | `/{userId}/status` | Получить статус дружбы с пользователем |
+
+#### Заявки:
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `GET` | `/requests/incoming` | Входящие заявки (с пагинацией) |
+
+#### Блокировка:
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `PUT` | `/block/{userId}` | Заблокировать пользователя |
+| `PUT` | `/unblock/{userId}` | Разблокировать пользователя |
+| `GET` | `/blockFriendId` | Список ID заблокированных |
+
+#### Подписки:
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `POST` | `/subscribe/{userId}` | Подписаться на пользователя |
+
+#### Вспомогательные (для интеграции с другими сервисами):
+
+| Метод | Endpoint | Описание |
+|:--|:--|:--|
+| `GET` | `/friendId` | Список ID всех друзей |
+| `GET` | `/friendId/post/{userId}` | Список ID друзей пользователя |
+| `GET` | `/recommendations` | Рекомендации друзей (stub) |
+
+### Примеры запросов:
+
+#### Отправить заявку в друзья:
+
+```bash
+curl -X POST http://localhost:8092/api/v1/friends/123e4567-e89b-12d3-a456-426614174000/request \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Ответ:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "userIdInitiator": "789e4567-e89b-12d3-a456-426614174000",
+  "userIdTarget": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "PENDING",
+  "createdAt": "2026-01-11T18:30:00"
+}
+```
+
+#### Получить список друзей:
+
+```bash
+curl -X GET "http://localhost:8092/api/v1/friends?page=0&size=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**Ответ:**
+```json
+{
+  "content": [
+    {
+      "account": {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "username": "john_doe",
+        "email": "john@example.com"
+      },
+      "status": "ACCEPTED"
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 20
+  },
+  "totalElements": 1
+}
+```
+
+#### Заблокировать пользователя:
+
+```bash
+curl -X PUT http://localhost:8092/api/v1/friends/block/123e4567-e89b-12d3-a456-426614174000 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**Ответ:**
+```json
+{
+  "message": "User blocked successfully"
+}
+```
+
+---
+
+## 🗄️ База данных
+
+### Схема таблицы `friendships`:
+
+| Колонка | Тип | Описание |
+|:--|:--|:--|
+| `id` | UUID | Primary Key |
+| `user_id_initiator` | UUID | Инициатор связи |
+| `user_id_target` | UUID | Получатель связи |
+| `status` | VARCHAR(20) | PENDING, ACCEPTED, DECLINED, BLOCKED, SUBSCRIBED |
+| `created_at` | TIMESTAMP | Дата создания |
+| `updated_at` | TIMESTAMP | Дата обновления |
+
+### Индексы:
+
+```sql
+CREATE INDEX idx_friendships_initiator ON friendships(user_id_initiator);
+CREATE INDEX idx_friendships_target ON friendships(user_id_target);
+CREATE INDEX idx_friendships_status ON friendships(status);
+CREATE UNIQUE INDEX idx_friendships_users ON friendships(user_id_initiator, user_id_target);
+```
+
+### Диаграмма состояний:
+
+```
+    ┌──────────┐
+    │  NONE    │  (нет связи)
+    └────┬─────┘
+         │
+         ▼
+    ┌──────────┐
+    │ PENDING  │  (ожидание)
+    └────┬─────┘
+         │
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+┌──────┐  ┌─────────┐
+│ACCEPT│  │DECLINED │
+└──┬───┘  └─────────┘
+   │
+   ▼
+┌──────┐
+│DELETED│
+└──────┘
+
+  ANY → BLOCKED (может быть применена к любому состоянию)
+```
+
+### Миграции базы данных
+
+Миграции выполняются автоматически при старте приложения с помощью Liquibase.
+
+Файлы миграций находятся в: `src/main/resources/db/changelog/`
+
+---
+
+## 📨 Kafka Events
+
+### Топик: `ACCOUNT_CHANGES`
+
+Сервис публикует следующие события:
+
+| Тип события | Описание | Payload |
+|:--|:--|:--|
+| `FRIEND_REQUEST_SENT` | Отправлена заявка | `{ type, recipientId, senderId }` |
+| `FRIEND_REQUEST_ACCEPTED` | Заявка принята | `{ type, recipientId, senderId }` |
+| `FRIEND_REQUEST_DECLINED` | Заявка отклонена | `{ type, recipientId, senderId }` |
+| `FRIEND_BLOCKED` | Пользователь заблокирован | `{ type, recipientId, senderId }` |
+| `FRIEND_UNBLOCKED` | Пользователь разблокирован | `{ type, recipientId, senderId }` |
+| `FRIEND_SUBSCRIBED` | Подписка на пользователя | `{ type, recipientId, senderId }` |
+
+**Формат события:**
+```json
+{
+  "type": "FRIEND_REQUEST_SENT",
+  "recipientId": "123e4567-e89b-12d3-a456-426614174000",
+  "senderId": "789e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+---
+
+## 🧪 Тестирование
+
+### Запуск тестов:
+
+```bash
+mvn test
+```
+
+### Запуск с покрытием:
+
+```bash
+mvn clean test jacoco:report
+```
+
+Отчет будет доступен в: `target/site/jacoco/index.html`
+
+### Структура тестов:
+
+- **Unit тесты** - тестирование бизнес-логики сервисов
+- **Integration тесты** - тестирование интеграции с БД и Kafka
+
+Текущее покрытие: ~70%
+
+---
+
+## 📊 Мониторинг
+
+### Actuator endpoints:
+
+Доступны по адресу: `http://localhost:8092/actuator`
+
+- `/actuator/health` - состояние приложения
+- `/actuator/metrics` - метрики приложения
+- `/actuator/prometheus` - метрики в формате Prometheus
+
+### Логирование:
+
+Логи записываются в:
+- **Консоль** - для разработки
+- **Файл** `logs/mc-friends.log` - для production
+
+Уровни логирования:
+- `INFO` - основные операции
+- `DEBUG` - детальная отладка (сервисы, репозитории)
+- `WARN` - предупреждения о нарушениях бизнес-правил
+- `ERROR` - критические ошибки
+
+---
+
+## 🔒 Безопасность
+
+### Аутентификация:
+
+Сервис использует JWT токены для аутентификации. Токен должен содержать:
+- `userId` - ID текущего пользователя
+- `roles` - роли пользователя
+
+### Авторизация:
+
+Все эндпоинты требуют аутентифицированного пользователя. Проверка прав доступа:
+- Пользователь может принимать только свои заявки
+- Пользователь может удалять только свои связи
+- Пользователь может разблокировать только своих заблокированных
+
+---
+
+## 🚀 Развертывание
+
+### Docker:
+
+```bash
+# Собрать образ
+docker build -t mc-friends:latest .
+
+# Запустить контейнер
+docker run -d \
+  --name mc-friends \
+  -p 8092:8092 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/friends_db \
+  -e KAFKA_BOOTSTRAP_SERVERS=kafka:29092 \
+  mc-friends:latest
+```
+
+### Docker Compose:
+
+```yaml
+version: '3.8'
+services:
+  mc-friends:
+    image: mc-friends:latest
+    ports:
+      - "8092:8092"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/friends_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+```
+
+---
+
+## 📝 Лицензия
+
+Этот проект распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
+
+---
+
+## 👥 Команда
+
+- **mc-friends Team** - разработка и поддержка
+
+---
+
+## 📞 Поддержка
+
+При возникновении проблем или вопросов:
+1. Проверьте [Issues](https://github.com/mrcreate163/mc-friends/issues)
+2. Создайте новый Issue с подробным описанием проблемы
+3. Приложите логи и примеры запросов
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Реализация рекомендаций друзей на основе общих интересов
+- [ ] Добавление кэширования часто запрашиваемых данных (Redis)
+- [ ] Реализация rate limiting для защиты от spam
+- [ ] Добавление WebSocket для real-time уведомлений
+- [ ] Улучшение алгоритмов рекомендаций с использованием ML
+
+---
+
+## 📚 Дополнительная документация
+
+- [API Documentation (Swagger)](http://localhost:8092/swagger-ui.html)
+- [JavaDoc Documentation](docs/javadoc/index.html)
+- [Architecture Decision Records](docs/adr/)
+- [Service Analysis](SERVICE_ANALYSIS.md)
