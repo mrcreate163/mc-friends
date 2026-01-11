@@ -43,44 +43,38 @@ springdoc:
 
 logging:
   level:
-    # Ваше приложение - максимальная детализация
-    com.example.mcfriends: DEBUG
-
-    # Spring Security
-    org.springframework.security: DEBUG
-
-    # Для отладки SQL запросов и транзакций
+    # Корневой уровень
+    root: INFO
+    
+    # Наш код - основной уровень
+    com.example.mcfriends: INFO
+    # Сервисы - подробная отладка
+    com.example.mcfriends.service: DEBUG
+    # Репозитории - подробная отладка
+    com.example.mcfriends.repository: DEBUG
+    
+    # Spring Framework
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    org.springframework.kafka: INFO
+    
+    # Hibernate - SQL запросы
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.transaction: DEBUG
-
-    # Spring Web (запросы/ответы)
-    org.springframework.web: DEBUG
-    org.springframework.web.servlet.mvc.method.annotation: DEBUG
-
+    
     # Kafka
-    org.springframework.kafka: DEBUG
     org.apache.kafka: WARN
 
-    # Redis
-    org.springframework.data.redis: DEBUG
-
-    # Общие ошибки Spring
-    org.springframework: WARN
-
-  # Паттерн с трейсом ошибок
+  # Паттерн логов
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n%throwable"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{40} - %msg%n%throwable"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
   # Запись в файл
   file:
-    name: logs/auth-service.log
+    name: logs/mc-friends.log
     max-size: 10MB
     max-history: 30
-
-  # Включить полный стек-трейс исключений
-  exception-conversion-word: "%wEx"
 
 
 management:
