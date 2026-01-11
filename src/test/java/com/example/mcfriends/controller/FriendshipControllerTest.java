@@ -22,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -71,6 +73,15 @@ class FriendshipControllerTest {
         };
     }
 
+    private UsernamePasswordAuthenticationToken createAuthentication(UUID userId) {
+        UserDataDetails userDetails = createMockUserDetails(userId);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+    }
+
     @Nested
     @DisplayName("sendFriendRequest Tests")
     class SendFriendRequestTests {
@@ -92,11 +103,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/friends/{targetUserId}/request", targetUserId)
-                            .with(authentication(org.springframework.security.core.authority.AuthorityUtils
-                                    .createAuthorityList("ROLE_USER"))
-                                    .andReturn()
-                                    .getAuthentication())
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("PENDING"))
@@ -116,7 +123,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/friends/{targetUserId}/request", targetUserId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isConflict());
         }
@@ -144,7 +151,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/friends/{requestId}/approve", requestId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("ACCEPTED"));
@@ -163,7 +170,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/friends/{requestId}/approve", requestId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
         }
@@ -179,7 +186,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/friends/{requestId}/approve", requestId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
         }
@@ -204,7 +211,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/friends/requests/{requestId}/decline", requestId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Friend request declined"));
@@ -223,7 +230,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(put("/api/v1/friends/requests/{requestId}/decline", requestId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
         }
@@ -252,7 +259,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends/requests/incoming")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .param("page", "0")
                             .param("size", "10")
                             .contentType(MediaType.APPLICATION_JSON))
@@ -274,7 +281,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends/requests/incoming")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
@@ -304,7 +311,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .param("page", "0")
                             .param("size", "10")
                             .contentType(MediaType.APPLICATION_JSON))
@@ -325,7 +332,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .param("page", "1")
                             .param("size", "20")
                             .contentType(MediaType.APPLICATION_JSON))
@@ -347,7 +354,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/friends/{friendId}", friendId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNoContent());
 
@@ -365,7 +372,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/friends/{friendId}", friendId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
         }
@@ -384,7 +391,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends/count")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.count").value(5));
@@ -411,7 +418,7 @@ class FriendshipControllerTest {
 
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends/{userId}/status", targetUserId)
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.statusCode").value("FRIEND"))
@@ -431,7 +438,7 @@ class FriendshipControllerTest {
         void getRecommendations_Returns200WithEmptyList() throws Exception {
             // Act & Assert
             mockMvc.perform(get("/api/v1/friends/recommendations")
-                            .principal(createMockUserDetails(testUserId))
+                            .with(authentication(createAuthentication(testUserId)))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
