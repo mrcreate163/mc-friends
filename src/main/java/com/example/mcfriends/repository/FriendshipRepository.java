@@ -48,6 +48,28 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
     );
 
     /**
+     * Найти связи где пользователь является инициатором с указанным статусом.
+     *
+     * <p>Используется для получения:
+     * <ul>
+     * <li>Исходящих заявок (status = PENDING)</li>
+     * <li>Заблокированных пользователей (status = BLOCKED)</li>
+     * <li>Подписок (status = SUBSCRIBED)</li>
+     * </ul>
+     * </p>
+     *
+     * @param userIdInitiator UUID пользователя-инициатора
+     * @param status статус для фильтрации
+     * @param pageable параметры пагинации
+     * @return страница с результатами
+     */
+    Page<Friendship> findByUserIdInitiatorAndStatus(
+            UUID userIdInitiator,
+            FriendshipStatus status,
+            Pageable pageable);
+
+
+    /**
      * Найти все дружеские связи пользователя с указанным статусом (постраничный результат).
      * 
      * <p>Ищет записи где:</p>

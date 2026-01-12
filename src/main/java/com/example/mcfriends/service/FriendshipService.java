@@ -11,6 +11,7 @@ import com.example.mcfriends.exception.InvalidStatusException;
 import com.example.mcfriends.exception.ResourceNotFoundException;
 import com.example.mcfriends.exception.SelfFriendshipException;
 import com.example.mcfriends.model.Friendship;
+import com.example.mcfriends.model.FriendshipFilterStatus;
 import com.example.mcfriends.model.FriendshipStatus;
 import com.example.mcfriends.repository.FriendshipRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -377,6 +378,101 @@ public class FriendshipService {
                 friendships.getTotalElements()
         );
     }
+
+    /**
+     * Получить связи пользователя по типу фильтрации.
+     *
+     * <p>Универсальный метод для получения различных типов связей:
+     * исходящих/входящих заявок, друзей, блокировок, подписок.</p>
+     *
+     * <p><b>Логика фильтрации:</b></p>
+     * <ul>
+     * <li>REQUEST_FROM - исходящие заявки (userId = initiator, status = PENDING)</li>
+     * <li>REQUEST_TO - входящие заявки (userId = target, status = PENDING)</li>
+     * <li>FRIEND - друзья (status = ACCEPTED)</li>
+     * <li>BLOCKED - заблокированные (userId = initiator, status = BLOCKED)</li>
+     * <li>SUBSCRIBED - подписки (userId = initiator, status = SUBSCRIBED)</li>
+     * <li>WATCHING - подписчики (userId = target, status = SUBSCRIBED)</li>
+     * </ul>
+     *
+     * <p>Если statusCode = null, возвращает друзей по умолчанию.</p>
+     *
+     * @param userId UUID текущего пользователя
+     * @param statusCode тип фильтрации (может быть null)
+     * @param pageable параметры пагинации
+     * @return страница с FriendDto объектами, содержащими данные аккаунтов
+     */
+    public Page<FriendDto> getFriendsByStatus(
+            UUID userId,
+            FriendshipFilterStatus statusCode,
+            Pageable pageable) {
+
+        log.debug("Getting friends by status: userId={}, statusCode={}", userId, statusCode);
+
+        // Если statusCode не указан, возвращаем друзей по умолчанию
+        if (statusCode == null) {
+            log.debug("StatusCode is null, defaulting to FRIEND");
+            statusCode = FriendshipFilterStatus.FRIEND;
+        }
+
+        Page<Friendship> friendshipsPage = switch (statusCode) {
+            case REQUEST_FROM -> {
+                log.debug("Fetching outgoing requests for userId={}", userId);
+                yield friendshipRepository.findByUserIdInitiatorAndStatus(
+                        userId, FriendshipStatus.PENDING, pageable);
+            }
+
+            case REQUEST_TO -> {
+                log.debug("Fetching incoming requests for userId={}", userId);
+                yield friendshipRepository.findByUserIdTargetAndStatus(
+                        userId, FriendshipStatus.PENDING, pageable);
+            }
+
+            case FRIEND -> {
+                log.debug("Fetching accepted friends for userId={}", userId);
+                yield friendshipRepository.findByUserIdAndStatus(
+                        userId, FriendshipStatus.ACCEPTED, pageable);
+            }
+
+            case BLOCKED -> {
+                log.debug("Fetching blocked users for userId={}", userId);
+                yield friendshipRepository.findByUserIdInitiatorAndStatus(
+                        userId, FriendshipStatus.BLOCKED, pageable);
+            }
+
+            case SUBSCRIBED -> {
+                log.debug("Fetching subscriptions for userId={}", userId);
+                yield friendshipRepository.findByUserIdInitiatorAndStatus(
+                        userId, FriendshipStatus.SUBSCRIBED, pageable);
+            }
+
+            case WATCHING -> {
+                log.debug("Fetching watchers for userId={}", userId);
+                yield friendshipRepository.findByUserIdTargetAndStatus(
+                        userId, FriendshipStatus.SUBSCRIBED, pageable);
+            }
+        };
+
+        log.debug("Found {} friendships for statusCode={}",
+                friendshipsPage.getTotalElements(), statusCode);
+
+        // Преобразуем Friendship в FriendDto с данными аккаунтов
+        return friendshipsPage.map(friendship -> {
+            // Определяем ID другого пользователя
+            UUID otherUserId = getOtherUserId(userId, friendship);
+
+            // Загружаем данные аккаунта из account-service
+            AccountDto account = accountClient.getAccountById(otherUserId);
+
+            // Создаём DTO
+            FriendDto dto = new FriendDto();
+            dto.setAccount(account);
+            dto.setStatus(friendship.getStatus());
+
+            return dto;
+        });
+    }
+
 
     /**
      * Получить список друзей с полной информацией о пользователях (без пагинации).

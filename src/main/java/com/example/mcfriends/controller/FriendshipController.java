@@ -6,6 +6,7 @@ import com.example.mcfriends.dto.FriendDto;
 import com.example.mcfriends.dto.FriendshipStatusDto;
 import com.example.mcfriends.dto.Message;
 import com.example.mcfriends.model.Friendship;
+import com.example.mcfriends.model.FriendshipFilterStatus;
 import com.example.mcfriends.service.FriendshipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -171,14 +172,18 @@ public class FriendshipController {
     @GetMapping
     public ResponseEntity<Page<FriendDto>> getFriendsList(
             @AuthenticationPrincipal UserDataDetails userDetails,
+            @RequestParam(required = false) FriendshipFilterStatus statusCode,
             Pageable pageable
     ) {
+        UUID userId = userDetails.getUserId();
+
         log.info("Received get friends list: userId={}, page={}, size={}", 
-                userDetails.getUserId(), pageable.getPageNumber(), pageable.getPageSize());
-        
-        Page<FriendDto> friends = friendshipService.getAcceptedFriendsDetails(userDetails.getUserId(), pageable);
-        
-        log.debug("Returning {} friends", friends.getTotalElements());
+                userId, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<FriendDto> friends = friendshipService.getFriendsByStatus(userId, statusCode, pageable);
+
+        log.debug("Returning {} friends for statusCode={}, totalPages={}",
+                friends.getTotalElements(), statusCode, friends.getTotalPages());
         return ResponseEntity.ok(friends);
     }
 
